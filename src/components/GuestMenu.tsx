@@ -167,7 +167,7 @@ export default function GuestMenu() {
     }, 80);
     window.setTimeout(
       () => setHighlightId((cur) => (cur === id ? null : cur)),
-      2600,
+      3800,
     );
   }
 
@@ -281,15 +281,22 @@ export default function GuestMenu() {
     const tags = d.tags ?? [];
     const strength = strengthInfo(d.abv);
     const fav = isFav(d.id);
+    const picked = highlightId === d.id;
+    const dimmed = highlightId !== null && !picked;
     return (
       <li
         key={d.id}
         id={`drink-${d.id}`}
-        className={`card card-hover relative flex items-center gap-4 p-3 animate-fade-up transition-shadow ${
-          highlightId === d.id ? "ring-2 ring-accent" : ""
-        }`}
+        className={`card card-hover relative flex items-center gap-4 p-3 animate-fade-up transition-all duration-300 ${
+          picked ? "pick-highlight z-10" : ""
+        } ${dimmed ? "scale-[0.98] opacity-40" : ""}`}
         style={{ animationDelay: `${Math.min(i * 60, 360)}ms` }}
       >
+        {picked && (
+          <span className="animate-rise pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#f0c673] to-accent-2 px-3 py-1 text-xs font-semibold text-accent-fg shadow-lg">
+            ✨ 為你揀咗呢杯
+          </span>
+        )}
         <button
           type="button"
           onClick={(e) => {
