@@ -137,6 +137,14 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
       {unlocked.length > 0 && (
         <StampUnlock drinks={unlocked} onClose={() => setUnlocked([])} />
       )}
+      <div className="mb-4">
+        <Link
+          href="/"
+          className="btn-ghost inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm"
+        >
+          ← 返去酒單
+        </Link>
+      </div>
       <header className="text-center animate-fade-up">
         <p className="text-xs uppercase tracking-[0.4em] text-accent">訂單狀態</p>
         <h1 className="mt-3 font-display text-3xl font-semibold">
