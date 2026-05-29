@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { Drink } from "@/lib/types";
 import { tagLabel } from "@/lib/tags";
 import { strengthInfo } from "@/lib/strength";
+import { haptic } from "@/lib/haptics";
 import DrinkImage from "@/components/DrinkImage";
 
 // Full-screen bottom sheet (mobile) / centered card (desktop) showing one drink
@@ -62,7 +63,10 @@ export default function DrinkDetail({
           ✕
         </button>
         <button
-          onClick={onToggleFav}
+          onClick={() => {
+            haptic("light");
+            onToggleFav();
+          }}
           aria-label={isFav ? "取消收藏" : "收藏"}
           aria-pressed={isFav}
           className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-lg backdrop-blur transition hover:bg-black/60"
@@ -118,8 +122,11 @@ export default function DrinkDetail({
                   </div>
                   <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-black/30">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-accent/70 to-accent transition-all"
-                      style={{ width: `${strength.pct}%` }}
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${strength.pct}%`,
+                        background: `linear-gradient(90deg, ${strength.color}aa, ${strength.color})`,
+                      }}
                     />
                   </div>
                 </div>
@@ -168,7 +175,10 @@ export default function DrinkDetail({
                 >
                   −
                 </button>
-                <span className="font-display text-lg font-semibold tabular-nums">
+                <span
+                  key={qty}
+                  className="animate-bump font-display text-lg font-semibold tabular-nums"
+                >
                   {qty} 杯
                 </span>
                 <button

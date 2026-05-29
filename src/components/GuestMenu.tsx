@@ -8,6 +8,7 @@ import type { Drink } from "@/lib/types";
 import { DRINK_TAGS, tagLabel } from "@/lib/tags";
 import { strengthInfo } from "@/lib/strength";
 import { useFavorites } from "@/lib/useFavorites";
+import { haptic } from "@/lib/haptics";
 import DrinkImage from "@/components/DrinkImage";
 import DrinkDetail from "@/components/DrinkDetail";
 import Ambient from "@/components/Ambient";
@@ -125,9 +126,11 @@ export default function GuestMenu() {
   }
 
   function add(id: string) {
+    haptic("light");
     setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
   }
   function remove(id: string) {
+    haptic("light");
     setCart((c) => {
       const next = { ...c };
       const qty = (next[id] ?? 0) - 1;
@@ -178,6 +181,7 @@ export default function GuestMenu() {
       localStorage.setItem("myOrders", JSON.stringify(mine.slice(0, 20)));
     } catch {}
 
+    haptic("success");
     router.push(`/order/${order.id}`);
   }
 
@@ -264,9 +268,9 @@ export default function GuestMenu() {
       )}
 
       {suggestion && (
-        <div className="card animate-fade-up mb-6 border-accent/40 p-4">
-          <p className="text-xs uppercase tracking-wide text-accent">為你推薦</p>
-          <h3 className="mt-1 font-display text-lg font-semibold">
+        <div className="card flash-once animate-fade-up mb-6 border-accent/40 p-4">
+          <p className="text-xs uppercase tracking-wide text-accent">✨ 為你推薦</p>
+          <h3 className="mt-1 font-display text-lg font-semibold text-gradient-gold">
             {suggestion.name}
           </h3>
           <p className="mt-0.5 text-sm text-muted">{suggestion.reason}</p>
@@ -291,42 +295,50 @@ export default function GuestMenu() {
       )}
 
       {!loading && (presentTags.length > 0 || favs.length > 0) && (
-        <div className="mb-5 flex flex-wrap gap-2">
-          {favs.length > 0 && (
-            <button
-              onClick={() => setFavOnly((v) => !v)}
-              className={`rounded-full px-3 py-1 text-sm font-medium ${
-                favOnly ? "btn-gold" : "btn-ghost"
-              }`}
-            >
-              ❤️ 我的收藏
-            </button>
-          )}
-          {presentTags.map((t) => {
-            const on = activeTags.includes(t.id);
-            return (
+        <div className="filter-rail -mx-4 mb-5 px-4 py-2.5">
+          <div className="no-scrollbar flex gap-2 overflow-x-auto">
+            {favs.length > 0 && (
               <button
-                key={t.id}
-                onClick={() => toggleTag(t.id)}
-                className={`rounded-full px-3 py-1 text-sm font-medium ${
-                  on ? "btn-gold" : "btn-ghost"
+                onClick={() => {
+                  haptic("light");
+                  setFavOnly((v) => !v);
+                }}
+                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
+                  favOnly ? "btn-gold" : "btn-ghost"
                 }`}
               >
-                {t.emoji} {t.label}
+                ❤️ 我的收藏
               </button>
-            );
-          })}
-          {(activeTags.length > 0 || favOnly) && (
-            <button
-              onClick={() => {
-                setActiveTags([]);
-                setFavOnly(false);
-              }}
-              className="rounded-full px-3 py-1 text-sm text-muted hover:text-foreground"
-            >
-              清除
-            </button>
-          )}
+            )}
+            {presentTags.map((t) => {
+              const on = activeTags.includes(t.id);
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    haptic("light");
+                    toggleTag(t.id);
+                  }}
+                  className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
+                    on ? "btn-gold" : "btn-ghost"
+                  }`}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              );
+            })}
+            {(activeTags.length > 0 || favOnly) && (
+              <button
+                onClick={() => {
+                  setActiveTags([]);
+                  setFavOnly(false);
+                }}
+                className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted hover:text-foreground"
+              >
+                清除
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -369,6 +381,7 @@ export default function GuestMenu() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  haptic("light");
                   toggleFav(d.id);
                 }}
                 aria-label={fav ? "取消收藏" : "收藏"}
@@ -384,12 +397,25 @@ export default function GuestMenu() {
                 onClick={() => setSelected(d)}
                 className="flex min-w-0 flex-1 items-center gap-4 text-left"
               >
-                <DrinkImage
-                  src={d.image_url}
-                  name={d.name}
-                  rounded="rounded-xl"
-                  className="h-20 w-20 shrink-0"
-                />
+                <div className="relative h-20 w-20 shrink-0">
+                  <DrinkImage
+                    src={d.image_url}
+                    name={d.name}
+                    rounded="rounded-xl"
+                    className="h-full w-full"
+                  />
+                  {strength && (
+                    <span
+                      className="strength-dot absolute bottom-1 right-1 h-3 w-3 rounded-full"
+                      style={{
+                        background: strength.color,
+                        ["--dot" as string]: strength.color,
+                      }}
+                      title={strength.label}
+                      aria-hidden
+                    />
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-display text-lg font-semibold leading-tight">
                     {d.name}
@@ -439,7 +465,10 @@ export default function GuestMenu() {
                   >
                     −
                   </button>
-                  <span className="w-4 text-center font-semibold tabular-nums">
+                  <span
+                    key={qty}
+                    className="animate-bump w-4 text-center font-semibold tabular-nums"
+                  >
                     {qty}
                   </span>
                   <button
@@ -466,7 +495,10 @@ export default function GuestMenu() {
                   className="btn-gold flex w-full items-center justify-between rounded-2xl px-5 py-3.5"
                 >
                   <span className="flex items-center gap-2">
-                    <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-accent-fg/15 px-1.5 text-sm tabular-nums">
+                    <span
+                      key={totalItems}
+                      className="animate-bump flex h-6 min-w-6 items-center justify-center rounded-full bg-accent-fg/15 px-1.5 text-sm tabular-nums"
+                    >
                       {totalItems}
                     </span>
                     查看訂單
