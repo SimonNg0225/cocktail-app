@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { font-family: 'WenQuanYi Zen Hei', sans-serif; }
+  body { font-size: 11pt; color: #1f1a14; line-height: 1.55; margin: 0; }
+  h1 { font-size: 30pt; color: #1f1a14; margin: 0 0 6pt 0; }
+  h2 { font-size: 17pt; color: #8a5a18; border-bottom: 2px solid #d9b25a;
+       padding-bottom: 4pt; margin: 0 0 10pt 0; page-break-before: always; }
+  h2.first { page-break-before: avoid; }
+  h3 { font-size: 13pt; color: #5a3e12; margin: 14pt 0 4pt 0; }
+  p { margin: 0 0 8pt 0; }
+  ul, ol { margin: 0 0 8pt 0; padding-left: 20pt; }
+  li { margin-bottom: 3pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 12pt 0; font-size: 10pt; }
+  th { background-color: #2a2018; color: #f3e6c8; text-align: left; padding: 6pt 8pt; border: 1px solid #2a2018; }
+  td { padding: 6pt 8pt; border: 1px solid #cdbfa6; vertical-align: top; }
+  tr:nth-child(even) td { background-color: #f7f1e4; }
+  .muted { color: #6b5d45; }
+  .accent { color: #8a5a18; font-weight: bold; }
+  .pill { background-color: #f1e4c4; color: #6b4a14; padding: 1pt 6pt; }
+  .cover { background-color: #1b140d; color: #f3e6c8; padding: 60pt 40pt; }
+  .cover h1 { color: #f3e6c8; font-size: 34pt; }
+  .cover .sub { color: #d9b25a; font-size: 15pt; margin-top: 6pt; }
+  .cover .tag { color: #b9a888; font-size: 11pt; margin-top: 30pt; line-height: 1.7; }
+  .lead { font-size: 12pt; color: #3a2e1c; }
+  .box { background-color: #f7f1e4; border-left: 4px solid #d9b25a; padding: 8pt 12pt; margin: 8pt 0; }
+  .kpi { font-size: 22pt; color: #8a5a18; font-weight: bold; }
+  .small { font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="cover">
+  <p style="color:#d9b25a; letter-spacing:3pt; font-size:10pt;">商業計劃書 · BUSINESS PLAN</p>
+  <h1>Coupe</h1>
+  <p class="sub">飲品界的口味身份層與 AI 調酒大腦</p>
+  <p style="color:#b9a888; font-size:12pt; margin-top:4pt;">The Taste Graph &amp; AI Bartending Brain for the Beverage World</p>
+  <p class="tag">
+    由「掃碼點單 App」進化為<br>
+    擁有專屬消費數據飛輪的飲品智能平台<br><br>
+    版本 v1.0　·　2026 年 5 月<br>
+    機密文件 — 僅供內部與潛在投資人審閱<br>
+    <span style="font-size:9pt;">（品牌名「Coupe」為暫定，可調整）</span>
+  </p>
+</div>
+
+<!-- ===== 1. 執行摘要 ===== -->
+<h2 class="first">一、執行摘要 Executive Summary</h2>
+<p class="lead">Coupe 是一個以消費現場為核心的飲品智能平台。我們從「掃碼落單」這個輕量入口切入活動與場所市場，但真正的目標，是成為飲品消費的<span class="accent">系統記錄（System of Record）</span>，並累積一個無可取替的資產——<span class="accent">口味圖譜（Taste Graph）</span>。</p>
+
+<p>在 AI 已成為大路商品的年代，單一「AI 功能」毫無防禦力，數週內即被複製。Coupe 的護城河不在演算法，而在三層複利資產：<strong>（1）對手買不到的專屬消費數據飛輪、（2）跨場所跟隨飲家的網絡效應、（3）作為場所營運大腦的高轉換成本。</strong>AI 在此扮演的角色，是把這三層護城河放大、令飛輪轉得比所有人快的引擎。</p>
+
+<div class="box">
+  <strong>一句話定位：</strong>我們不做「落單 App」，我們做<strong>「飲品界的口味身份層 + AI 調酒大腦」</strong>——由活動／場所切入，累積 Taste Graph，最終向酒商變現洞察。
+</div>
+
+<table>
+  <tr><th>項目</th><th>內容</th></tr>
+  <tr><td>切入楔子</td><td>活動／派對（婚禮、私人派對、Pop-up Bar）——貼近現有產品、避開酒吧合規與收銀地獄</td></tr>
+  <tr><td>核心資產</td><td>口味圖譜（Taste Graph）：意圖 × 情境 × 結果的真實消費數據</td></tr>
+  <tr><td>收入模式</td><td>B 端 SaaS 訂閱 + 用量計費 + 交易抽成；長線：酒商數據洞察</td></tr>
+  <tr><td>三段策略</td><td>① 擁有場所（起步）→ ② 擁有飲家（網絡效應）→ ③ 擁有數據通路（最高毛利）</td></tr>
+</table>
+
+<!-- ===== 2. 問題與機會 ===== -->
+<h2>二、問題與機會 Problem &amp; Opportunity</h2>
+
+<h3>2.1 真實痛點</h3>
+<p>飲品消費現場長期存在三個未被解決、且夠痛、夠頻密的問題：</p>
+<ul>
+  <li><strong>場所端：</strong>點單混亂、人手成本高、庫存與毛利黑箱、無法預測需求；現有 POS 笨重昂貴，並不為「飲品體驗」而設。</li>
+  <li><strong>飲家端：</strong>面對酒單選擇困難，「我唔知飲咩好」；換一間店就要重新被認識，過往喜好歸零。</li>
+  <li><strong>酒商端：</strong>只看得到出貨數據，看不到「誰、在什麼心情與場合下、喝了、喜不喜歡」的真實 ground truth，行銷如同盲射。</li>
+</ul>
+
+<h3>2.2 為何是現在（Why Now）</h3>
+<ul>
+  <li>生成式 AI 成熟，個人化推薦與代理式營運首次在低成本下可行。</li>
+  <li>掃碼點單、無接觸消費在疫情後成為常態，市場教育已完成。</li>
+  <li>體驗型消費（婚禮、私宴、品牌活動）持續增長，願為「難忘體驗」付費。</li>
+</ul>
+
+<h3>2.3 市場規模（示意，待精算）</h3>
+<table>
+  <tr><th>層級</th><th>定義</th><th>估算（示意）</th></tr>
+  <tr><td>TAM</td><td>全球飲品服務場所 + 活動飲品市場軟體與支付</td><td>數百億美元級</td></tr>
+  <tr><td>SAM</td><td>亞太區中小型酒吧／餐廳 + 活動策劃</td><td>數十億美元級</td></tr>
+  <tr><td>SOM（3 年）</td><td>香港 + 大灣區 + 東南亞早期採用者</td><td>初期可達數千萬港元年收</td></tr>
+</table>
+<p class="small muted">※ 上述為策略示意級別，正式募資前需以由下而上（bottom-up）方式精算。</p>
+
+<!-- ===== 3. 產品與獨特價值 ===== -->
+<h2>三、產品與獨特價值主張</h2>
+
+<h3>3.1 我們手上的罕有資產</h3>
+<p>Coupe 坐在一個黃金位置——<strong>消費發生的那一刻</strong>，同時捕捉三樣全世界極少人能同時擁有的數據：</p>
+<table>
+  <tr><th>維度</th><th>捕捉內容</th></tr>
+  <tr><td>意圖 Intent</td><td>客人想要什麼、什麼心情、口味偏好與禁忌</td></tr>
+  <tr><td>情境 Context</td><td>地點、場合、同行者、時間、天氣、活動類型</td></tr>
+  <tr><td>結果 Outcome</td><td>實際點了什麼、是否續杯、評分、是否回購</td></tr>
+</table>
+<div class="box">三者結合，即為<strong>「口味 × 社交消費」的真實數據（Taste Graph）</strong>。Apple 沒有消費現場、Google 只知搜尋、酒商只見出貨——<strong>這正是無可取替之物，而非那個落單介面。</strong></div>
+
+<h3>3.2 三層 AI 玩法（以商業價值排序）</h3>
+<table>
+  <tr><th>層級</th><th>功能</th><th>商業效果</th></tr>
+  <tr><td>① 個人化引擎</td><td>越用越懂你：口味檔案、酒量、偏好、跨場所記憶</td><td><strong>鎖客 Lock-in</strong>：離開即失去「最懂你」的身份</td></tr>
+  <tr><td>② 代理式營運</td><td>需求預測、自動補貨、庫存感知配方、自動定價與散場報告</td><td><strong>取代人力</strong>：賣的是省下的人手與毛利</td></tr>
+  <tr><td>③ 生成式體驗</td><td>即場發明專屬招牌酒 + 生成分享卡</td><td><strong>溢價 + 病毒獲客</strong>（自帶品牌傳播）</td></tr>
+</table>
+
+<h3>3.3 旗艦獨家功能</h3>
+<ul>
+  <li><strong>庫存感知 AI 調酒：</strong>「用我手上有的材料，幫我設計一杯」——串接庫存即時生成可行配方，對手極難複製此閉環。</li>
+  <li><strong>跟身口味檔案：</strong>飲家的 Taste Graph 跨場所通用，去到任何採用 Coupe 的場地都被認得。</li>
+  <li><strong>飲品券／Tab 收費：</strong>主人預付額度，客人掃碼扣券；逐杯收費、小費、拆帳。</li>
+  <li><strong>營運分析：</strong>熱銷榜、時段分析、Pour Cost 毛利、消耗預測與補貨提醒、散場自動報告。</li>
+</ul>
+
+<!-- ===== 4. 護城河 ===== -->
+<h2>四、護城河與競爭優勢 Moat</h2>
+<p class="lead">資深鐵律：<strong>功能會被抄，護城河不會。</strong>我們在無法被複製的層面競爭。</p>
+<table>
+  <tr><th>護城河類型</th><th>對 Coupe 的意義</th><th>強度</th></tr>
+  <tr><td>專屬數據飛輪</td><td>消費現場的意圖×情境×結果，越多場所越準</td><td>★★★★★</td></tr>
+  <tr><td>網絡效應</td><td>口味檔案跟隨飲家跨場所，雙邊複利</td><td>★★★★☆</td></tr>
+  <tr><td>轉換成本</td><td>成為場所的系統記錄、收銀與庫存大腦</td><td>★★★★☆</td></tr>
+  <tr><td>品牌與信任</td><td>體驗品牌 + 數據合規定位</td><td>★★★☆☆</td></tr>
+  <tr><td>合規定位</td><td>定位為工具/SaaS（店家持牌），擋住懶得處理合規的對手</td><td>★★★☆☆</td></tr>
+</table>
+
+<h3>4.1 數據飛輪（複利結構）</h3>
+<div class="box">
+更多場所採用　→　更多消費數據　→　推薦更準　→　客人體驗更好　→　更多場所想用<br>
+＋（橫向）飲家帶住口味檔案去任何一間用 Coupe 的場所　→　酒商肯付費買洞察　→　補貼獲客
+</div>
+<p>類比：<strong>Toast／Square</strong> 如何以「系統記錄 + 支付」鎖死餐廳；<strong>Spotify</strong> 如何以「越聽越準」鎖死聽眾。Coupe 要做的，是<strong>飲品界這兩者的合體</strong>。</p>
+
+<!-- ===== 5. 商業模式 ===== -->
+<h2>五、商業模式與收費 Business Model</h2>
+<table>
+  <tr><th>方案</th><th>對象</th><th>內容</th><th>定價（示意）</th></tr>
+  <tr><td>Free</td><td>引流</td><td>每月 1 個活動、基本點單、排行榜</td><td>免費</td></tr>
+  <tr><td>Pro</td><td>活動策劃 / 進階家庭主人</td><td>無限活動、AI 調酒師、分析、品牌客製</td><td>HK$X / 月</td></tr>
+  <tr><td>Venue</td><td>真實酒吧 / 餐廳</td><td>多工作站 KDS、收費/Tab、API、自訂網域、SLA</td><td>HK$XXX / 月</td></tr>
+  <tr><td>用量計費</td><td>全部</td><td>AI 生成、簡訊通知、超量交易</td><td>按量</td></tr>
+  <tr><td>數據洞察（長線）</td><td>酒商 / 品牌</td><td>匿名化口味與消費洞察報告、新品測試</td><td>專案 / 年費</td></tr>
+</table>
+<p><strong>收入組合演進：</strong>短線靠 B 端 SaaS 月費養數；中線靠交易抽成 + 用量；長線最大一塊來自酒商數據變現（毛利最高）。</p>
+
+<!-- ===== 6. 進入市場策略 ===== -->
+<h2>六、目標客群與進入市場策略 GTM</h2>
+<h3>6.1 楔子選擇</h3>
+<table>
+  <tr><th>方向</th><th>客戶</th><th>付費意願</th><th>難度</th><th>建議</th></tr>
+  <tr><td>活動／派對</td><td>婚禮、私宴、Pop-up</td><td>中</td><td>低</td><td><span class="accent">起步首選</span></td></tr>
+  <tr><td>真實酒吧/餐廳</td><td>小酒吧、酒店</td><td>高</td><td>高</td><td>第二階段</td></tr>
+  <tr><td>家庭娛樂</td><td>調酒愛好者</td><td>低</td><td>低</td><td>引流/品牌</td></tr>
+</table>
+
+<h3>6.2 獲客策略</h3>
+<ul>
+  <li><strong>病毒迴圈：</strong>客人分享自帶品牌的招牌酒卡片到社交平台 → 免費曝光。</li>
+  <li><strong>活動策劃合作：</strong>與婚禮統籌、活動公司、調酒師接案者結盟分潤。</li>
+  <li><strong>KOL / 體驗式行銷：</strong>調酒師與生活風格 KOL 實測背書。</li>
+  <li><strong>由下而上：</strong>單場活動體驗極佳 → 主辦方成為長期付費客。</li>
+</ul>
+
+<!-- ===== 7. AI 技術策略 ===== -->
+<h2>七、AI 技術策略（商業視角）</h2>
+<ul>
+  <li><strong>AI 是引擎，不是賣點：</strong>對外溝通價值（省人手、多賺毛利、難忘體驗），而非「我們用了某某模型」。</li>
+  <li><strong>數據護城河優先：</strong>所有 AI 互動都回饋 Taste Graph，形成複利。</li>
+  <li><strong>成本與濫用治理：</strong>對 AI 端點施加配額、限流與快取，控制單位經濟（unit economics），避免被刷爆成本。</li>
+  <li><strong>合規與私隱：</strong>口味數據匿名化、年齡驗證、符合 PDPO/GDPR——合規本身即護城河。</li>
+</ul>
+
+<!-- ===== 8. 路線圖 ===== -->
+<h2>八、產品路線圖 Roadmap</h2>
+<table>
+  <tr><th>階段</th><th>時間</th><th>重點</th></tr>
+  <tr><td>地基</td><td>0–3 月</td><td>多租戶架構、角色權限、訂閱計費、AI 成本護欄</td></tr>
+  <tr><td>商業 MVP</td><td>3–6 月</td><td>活動模式、自助開店、庫存感知 AI 調酒</td></tr>
+  <tr><td>變現</td><td>6–9 月</td><td>飲品券/Tab 收費、散場分析報告</td></tr>
+  <tr><td>規模化</td><td>9–18 月</td><td>KDS 多工作站、離線同步、跟身口味檔案、多語言</td></tr>
+  <tr><td>數據變現</td><td>18 月+</td><td>酒商洞察產品、新品測試平台</td></tr>
+</table>
+
+<!-- ===== 9. 競爭格局 ===== -->
+<h2>九、競爭格局 Competitive Landscape</h2>
+<table>
+  <tr><th>類型</th><th>代表</th><th>弱點 / 我們的差異</th></tr>
+  <tr><td>傳統 POS</td><td>Toast、Square 等</td><td>笨重、非為飲品體驗而設、無口味智能</td></tr>
+  <tr><td>掃碼點單工具</td><td>各地 QR 點餐</td><td>純工具、無數據飛輪與網絡效應</td></tr>
+  <tr><td>調酒食譜 App</td><td>消費級 App</td><td>無消費現場、無營運閉環、變現弱</td></tr>
+  <tr><td><strong>Coupe</strong></td><td>—</td><td><strong>消費現場 + 口味圖譜 + AI 營運閉環，三者合一</strong></td></tr>
+</table>
+
+<!-- ===== 10. 財務預測 ===== -->
+<h2>十、財務預測（示意 Illustrative）</h2>
+<table>
+  <tr><th>指標</th><th>第 1 年</th><th>第 2 年</th><th>第 3 年</th></tr>
+  <tr><td>付費客戶數</td><td>50–150</td><td>500–1,000</td><td>2,000+</td></tr>
+  <tr><td>年經常性收入 ARR</td><td>低（種子）</td><td>數百萬港元</td><td>千萬港元級</td></tr>
+  <tr><td>毛利率</td><td>~60%</td><td>~70%</td><td>~75%+</td></tr>
+  <tr><td>主要收入來源</td><td>SaaS 訂閱</td><td>訂閱 + 交易</td><td>+ 酒商數據</td></tr>
+</table>
+<p class="small muted">※ 數字為策略示意，非承諾；正式版需以單位經濟、轉化率、流失率與 CAC/LTV 模型支撐。</p>
+
+<!-- ===== 11. 風險 ===== -->
+<h2>十一、風險與緩解 Risks &amp; Mitigation</h2>
+<table>
+  <tr><th>風險</th><th>緩解</th></tr>
+  <tr><td>功能被複製</td><td>競爭核心移至數據、網絡與信任等需時累積的層面</td></tr>
+  <tr><td>家庭市場付費意願低</td><td>聚焦場所/活動/酒商，家庭僅作引流</td></tr>
+  <tr><td>AI 成本失控</td><td>配額、限流、快取，嚴控單位經濟</td></tr>
+  <tr><td>酒類法規/責任</td><td>定位為 SaaS 工具，店家持牌；年齡驗證、合規設計</td></tr>
+  <tr><td>通路/獲客</td><td>病毒迴圈 + 活動策劃結盟 + KOL，降低 CAC</td></tr>
+  <tr><td>數據私隱</td><td>匿名化、合規認證，化為護城河而非負擔</td></tr>
+</table>
+
+<!-- ===== 12. 結語與所需 ===== -->
+<h2>十二、結語與下一步</h2>
+<p class="lead">如果只記住一句：<strong>商業化的成敗不在功能多寡，而在能否先建立「多租戶 + 資料隔離 + 計費」的地基，並把每一次 AI 互動轉化為複利的口味圖譜。</strong></p>
+<p>我們的下注：以<strong>活動/場所</strong>切入做系統記錄，累積 <strong>Taste Graph</strong>，建立雙邊網絡效應，最終向<strong>酒商</strong>變現洞察。AI 是令這個飛輪轉得比所有人快的引擎，而非一張功能清單。</p>
+<h3>需要拍板的策略分叉</h3>
+<ol>
+  <li><strong>擁有場所</strong>（Vertical SaaS，似 Toast）：穩、付費高，但須落手營運與合規。</li>
+  <li><strong>擁有飲家</strong>（口味身份 + 網絡效應，似 Spotify）：護城河深、爆發力大，但須燒錢搶用戶、變現較慢。</li>
+  <li><strong>擁有數據通路</strong>（向酒商賣洞察）：毛利最高，但須先有規模。</li>
+</ol>
+<div class="box">建議路徑：<strong>以 ① 起步、鋪 ② 的軌、瞄準 ③ 的水井。</strong></div>
+
+<p class="small muted" style="margin-top:24pt;">本文件由策略討論整理而成，內含示意性假設，僅供方向性參考，不構成投資承諾或財務保證。</p>
+
+</body>
+</html>
