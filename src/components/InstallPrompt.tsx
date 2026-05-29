@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 // Minimal mobile-only "add to home screen" nudge. Captures the Chromium
 // beforeinstallprompt event and offers a single tasteful banner; once the guest
-// installs or dismisses it, we stay quiet for the rest of the session.
+// installs or dismisses it, we stay quiet for the rest of the session. Copy
+// adapts for the admin back office (which installs its own /admin manifest).
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -13,6 +15,8 @@ type BeforeInstallPromptEvent = Event & {
 const DISMISS_KEY = "installPromptDismissed";
 
 export default function InstallPrompt() {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin") ?? false;
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
   );
@@ -51,11 +55,13 @@ export default function InstallPrompt() {
   return (
     <div className="animate-rise fixed inset-x-0 bottom-3 z-[55] mx-auto w-full max-w-md px-4">
       <div className="glass flex items-center gap-3 rounded-2xl px-4 py-3">
-        <span className="text-2xl">🍸</span>
+        <span className="text-2xl">{isAdmin ? "🥃" : "🍸"}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">加到主畫面</p>
+          <p className="text-sm font-medium">
+            {isAdmin ? "加後台到主畫面" : "加到主畫面"}
+          </p>
           <p className="truncate text-xs text-muted">
-            一撳即開，落單更快。
+            {isAdmin ? "一撳直入後台收單。" : "一撳即開，落單更快。"}
           </p>
         </div>
         <button

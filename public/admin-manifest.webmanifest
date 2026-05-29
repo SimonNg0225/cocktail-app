@@ -1,0 +1,17 @@
+{
+  "name": "屋企調酒吧 · 後台",
+  "short_name": "調酒吧後台",
+  "description": "調酒師後台 · 即時收單與酒單管理",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "zh-HK",
+  "background_color": "#0e0a07",
+  "theme_color": "#0e0a07",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
