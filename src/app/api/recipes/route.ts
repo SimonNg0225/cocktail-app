@@ -34,9 +34,24 @@ export async function POST(request: Request) {
     );
   }
 
+  // Existing menu drinks — so the AI doesn't propose duplicates of what's
+  // already on the menu, and as a safety net we filter them out afterwards.
+  const { data: existing } = await supabase.from("drinks").select("name");
+  const existingNames = (existing ?? [])
+    .map((d) => (d.name ?? "").toString().trim())
+    .filter(Boolean);
+  const norm = (s: string) => s.replace(/\s+/g, "").toLowerCase();
+  const existingSet = new Set(existingNames.map(norm));
+
   const stockList = inventory
     .map((i) => `- ${i.name} (${i.category})`)
     .join("\n");
+
+  const excludeBlock = existingNames.length
+    ? `\n\n酒單上已經有以下呢啲酒，請「唔好」重複推薦（要構思同呢啲唔一樣嘅酒）：\n${existingNames
+        .map((n) => `- ${n}`)
+        .join("\n")}`
+    : "";
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -46,7 +61,7 @@ ${stockList}
 
 請只用上面列出嘅材料（可以假設有水、冰、糖／糖漿等基本嘢），構思 4 至 6 款可以即刻調到嘅雞尾酒。${
     preference ? `客人偏好：${preference}。` : ""
-  }
+  }${excludeBlock}
 
 每款請提供：名、一句簡介、所需材料清單、簡單做法步驟、0 至 3 個風格標籤，同埋估計每杯嘅酒精濃度 abv（百分比數字，例如 0、5、18；無酒精就 0）。標籤淨係可以由呢幾個揀（用英文 id）：mocktail（無酒精）、strong（烈）、refreshing（清爽）、sweet（甜）、sour（酸）、sparkling（有氣）。用繁體中文（廣東話亦可）。唔好推薦需要冇列出材料嘅酒。`;
 
@@ -100,7 +115,11 @@ ${stockList}
 
     const text = response.text ?? "{}";
     const parsed = JSON.parse(text);
-    return NextResponse.json({ recipes: parsed.recipes ?? [] });
+    // Safety net: drop any recipe whose name already exists on the menu.
+    const recipes = (parsed.recipes ?? []).filter(
+      (r: { name?: string }) => !existingSet.has(norm((r?.name ?? "").toString())),
+    );
+    return NextResponse.json({ recipes });
   } catch (err) {
     console.error("Gemini error", err);
     return NextResponse.json(

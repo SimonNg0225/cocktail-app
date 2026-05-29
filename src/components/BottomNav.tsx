@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 // order-status screen so it never competes with their own bottom actions.
 const TABS = [
   { href: "/", label: "酒單", icon: "🍸" },
+  { href: "/collection", label: "圖鑑", icon: "📖" },
   { href: "/orders", label: "我的單", icon: "🧾" },
   { href: "/stars", label: "之星", icon: "🏆" },
 ];
