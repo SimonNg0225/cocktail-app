@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { Order, OrderItem, OrderStatus as Status } from "@/lib/types";
 import Confetti from "@/components/Confetti";
 import Ambient from "@/components/Ambient";
+import { recordServedOrder } from "@/lib/collection";
+import { toast } from "@/lib/toast";
+import { haptic } from "@/lib/haptics";
 
 const STEPS: { key: Status; label: string; icon: string }[] = [
   { key: "pending", label: "已收到", icon: "📝" },
@@ -60,6 +63,28 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
       supabase.removeChannel(channel);
     };
   }, [supabase, orderId]);
+
+  // When the drink is served, stamp the guest's 圖鑑 (passport) and celebrate
+  // any newly-unlocked stamps. recordServedOrder is idempotent per order.
+  useEffect(() => {
+    if (order?.status !== "served" || items.length === 0) return;
+    const newly = recordServedOrder(
+      order.id,
+      items.map((it) => ({
+        drink_id: it.drink_id,
+        drink_name: it.drink_name,
+        quantity: it.quantity,
+      })),
+    );
+    if (newly.length > 0) {
+      haptic("success");
+      const names = newly
+        .map((id) => items.find((it) => it.drink_id === id)?.drink_name)
+        .filter(Boolean)
+        .join("、");
+      toast(`🎉 解鎖新印章：${names}`);
+    }
+  }, [order?.status, order?.id, items]);
 
   if (loading)
     return (
