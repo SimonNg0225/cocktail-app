@@ -18,8 +18,17 @@ import { toast } from "@/lib/toast";
 import DrinkImage from "@/components/DrinkImage";
 import DrinkDetail from "@/components/DrinkDetail";
 import Ambient from "@/components/Ambient";
+import FortuneWheel from "@/components/FortuneWheel";
 
 type Suggestion = { drinkId: string; name: string; reason: string };
+type Invented = {
+  name: string;
+  description: string;
+  ingredients: string[];
+  steps: string[];
+  abv: number | null;
+};
+type CustomItem = { id: string; name: string; recipe: string; qty: number };
 
 export default function GuestMenu() {
   const router = useRouter();
@@ -44,6 +53,10 @@ export default function GuestMenu() {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Drink | null>(null);
+  const [wheelOpen, setWheelOpen] = useState(false);
+  const [inventing, setInventing] = useState(false);
+  const [invented, setInvented] = useState<Invented | null>(null);
+  const [customItems, setCustomItems] = useState<CustomItem[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -85,7 +98,9 @@ export default function GuestMenu() {
     };
   }, [supabase]);
 
-  const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+  const totalItems =
+    Object.values(cart).reduce((a, b) => a + b, 0) +
+    customItems.reduce((a, c) => a + c.qty, 0);
   const cartDrinks = drinks.filter((d) => (cart[d.id] ?? 0) > 0);
 
   // Only offer filter chips for tags that actually appear on the menu.
@@ -171,18 +186,76 @@ export default function GuestMenu() {
     );
   }
 
-  function randomPick() {
-    const pool = visible.length > 0 ? visible : drinks;
-    if (pool.length === 0) return;
-    // Runs only on the 隨機 button click (an event handler), not during render.
-    // eslint-disable-next-line react-hooks/purity
-    const pick = pool[Math.floor(Math.random() * pool.length)];
+  // Fortune wheel landed on a drink.
+  function wheelPicked(d: Drink) {
+    setWheelOpen(false);
     setSuggestion({
-      drinkId: pick.id,
-      name: pick.name,
-      reason: "幫你隨機揀咗一杯 🎲",
+      drinkId: d.id,
+      name: d.name,
+      reason: "命運輪盤幫你揀咗呢杯 🎡",
     });
-    focusDrink(pick.id);
+    focusDrink(d.id);
+  }
+
+  // AI invents a one-off bespoke cocktail from the bar's ingredient palette.
+  async function invent() {
+    setInventing(true);
+    setInvented(null);
+    try {
+      const res = await fetch("/api/invent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vibe: mood }),
+      });
+      const data = await res.json();
+      if (res.ok && data.name) {
+        setInvented({
+          name: data.name,
+          description: data.description ?? "",
+          ingredients: data.ingredients ?? [],
+          steps: data.steps ?? [],
+          abv: data.abv ?? null,
+        });
+        haptic("light");
+      } else {
+        toast(data.error ?? "AI 諗唔到，再試吓 🙏");
+      }
+    } catch {
+      toast("網絡問題，再試吓 🙏");
+    }
+    setInventing(false);
+  }
+
+  function addInvented(inv: Invented) {
+    const recipe = [
+      "材料：\n" + inv.ingredients.map((i) => `· ${i}`).join("\n"),
+      inv.steps.length
+        ? "做法：\n" + inv.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    setCustomItems((cur) => [
+      ...cur,
+      { id: crypto.randomUUID(), name: inv.name, recipe, qty: 1 },
+    ]);
+    haptic("light");
+    toast(`已加入 🍸 ${inv.name}`);
+    setInvented(null);
+    setSheetOpen(true);
+  }
+
+  function incCustom(id: string) {
+    haptic("light");
+    setCustomItems((c) => c.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x)));
+  }
+  function decCustom(id: string) {
+    haptic("light");
+    setCustomItems((c) =>
+      c.flatMap((x) =>
+        x.id !== id ? [x] : x.qty <= 1 ? [] : [{ ...x, qty: x.qty - 1 }],
+      ),
+    );
   }
 
   async function aiPick() {
@@ -250,13 +323,22 @@ export default function GuestMenu() {
       return;
     }
 
-    const items = cartDrinks.map((d) => ({
-      order_id: order.id,
-      drink_id: d.id,
-      drink_name: d.name,
-      quantity: cart[d.id],
-      note: itemNotes[d.id]?.trim() || null,
-    }));
+    const items = [
+      ...cartDrinks.map((d) => ({
+        order_id: order.id,
+        drink_id: d.id,
+        drink_name: d.name,
+        quantity: cart[d.id],
+        note: itemNotes[d.id]?.trim() || null,
+      })),
+      ...customItems.map((c) => ({
+        order_id: order.id,
+        drink_id: null,
+        drink_name: c.name,
+        quantity: c.qty,
+        note: `【AI 獨家配方】\n${c.recipe}`,
+      })),
+    ];
 
     const { error: itemsErr } = await supabase.from("order_items").insert(items);
     if (itemsErr) {
@@ -467,11 +549,78 @@ export default function GuestMenu() {
               {suggesting ? "諗緊…" : "✨ 幫我揀"}
             </button>
             <button
-              onClick={randomPick}
-              disabled={suggesting}
-              className="btn-ghost rounded-xl px-5 py-2.5 text-sm disabled:opacity-60"
+              onClick={invent}
+              disabled={inventing}
+              className="btn-gold rounded-xl px-5 py-2.5 text-sm disabled:opacity-60"
             >
-              🎲 隨機一杯
+              {inventing ? "調緊…" : "🍸 為你而調"}
+            </button>
+            <button
+              onClick={() => setWheelOpen(true)}
+              className="btn-ghost rounded-xl px-5 py-2.5 text-sm"
+            >
+              🎡 命運輪盤
+            </button>
+          </div>
+        </div>
+      )}
+
+      {invented && (
+        <div className="card flash-once animate-fade-up mb-6 border-accent/40 p-4">
+          <p className="text-xs uppercase tracking-wide text-accent">
+            🍸 為你而調 · 獨一無二
+          </p>
+          <h3 className="mt-1 font-display text-xl font-semibold text-gradient-gold">
+            {invented.name}
+          </h3>
+          {invented.description && (
+            <p className="mt-1 text-sm text-muted">{invented.description}</p>
+          )}
+          {invented.ingredients.length > 0 && (
+            <div className="mt-3 rounded-xl bg-surface-2 p-3 text-sm">
+              <p className="text-xs uppercase tracking-wide text-muted-2">材料</p>
+              <ul className="mt-1 space-y-0.5">
+                {invented.ingredients.map((ing, i) => (
+                  <li key={i} className="text-foreground/90">
+                    · {ing}
+                  </li>
+                ))}
+              </ul>
+              {invented.steps.length > 0 && (
+                <>
+                  <p className="mt-2 text-xs uppercase tracking-wide text-muted-2">
+                    做法
+                  </p>
+                  <ol className="mt-1 space-y-0.5 text-muted">
+                    {invented.steps.map((s, i) => (
+                      <li key={i}>
+                        {i + 1}. {s}
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+            </div>
+          )}
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => addInvented(invented)}
+              className="btn-gold rounded-full px-4 py-1.5 text-sm"
+            >
+              落單呢杯
+            </button>
+            <button
+              onClick={invent}
+              disabled={inventing}
+              className="btn-ghost rounded-full px-4 py-1.5 text-sm disabled:opacity-60"
+            >
+              {inventing ? "調緊…" : "🔁 再調一杯"}
+            </button>
+            <button
+              onClick={() => setInvented(null)}
+              className="btn-ghost rounded-full px-4 py-1.5 text-sm"
+            >
+              唔要
             </button>
           </div>
         </div>
@@ -719,6 +868,42 @@ export default function GuestMenu() {
                       </li>
                     ))}
                   </ul>
+                  {customItems.length > 0 && (
+                    <ul className="space-y-2">
+                      {customItems.map((c) => (
+                        <li
+                          key={c.id}
+                          className="flex items-center justify-between gap-2 text-sm"
+                        >
+                          <span className="min-w-0 flex-1 truncate font-medium">
+                            🍸 {c.name}
+                            <span className="ml-1.5 rounded-full bg-accent/15 px-1.5 py-0.5 text-[0.6rem] text-accent">
+                              獨家
+                            </span>
+                          </span>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              onClick={() => decCustom(c.id)}
+                              aria-label="減一杯"
+                              className="btn-ghost flex h-7 w-7 items-center justify-center rounded-full text-base leading-none"
+                            >
+                              −
+                            </button>
+                            <span className="w-4 text-center tabular-nums">
+                              {c.qty}
+                            </span>
+                            <button
+                              onClick={() => incCustom(c.id)}
+                              aria-label="加一杯"
+                              className="btn-gold flex h-7 w-7 items-center justify-center rounded-full text-base leading-none"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   <div className="hairline" />
                   <input
                     value={name}
@@ -745,6 +930,14 @@ export default function GuestMenu() {
             </div>
           </div>
         </div>
+      )}
+
+      {wheelOpen && (
+        <FortuneWheel
+          pool={visible.length > 0 ? visible : drinks}
+          onPick={wheelPicked}
+          onClose={() => setWheelOpen(false)}
+        />
       )}
 
       {selected && (
