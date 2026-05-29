@@ -2,6 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import AdminNav from "@/components/AdminNav";
 import LogoutButton from "@/components/LogoutButton";
 
+// Admin gets its own PWA manifest so "加到主畫面" from the back office installs an
+// app that launches at /admin (not the guest menu). Lives outside /admin/ so the
+// auth middleware doesn't redirect the manifest request to the login page.
+export const metadata = {
+  manifest: "/admin-manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent" as const,
+    title: "調酒吧後台",
+  },
+};
+
 export default async function AdminLayout({
   children,
 }: {

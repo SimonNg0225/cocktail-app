@@ -5,6 +5,7 @@ import type { Drink } from "@/lib/types";
 import { tagLabel } from "@/lib/tags";
 import { strengthInfo } from "@/lib/strength";
 import { haptic } from "@/lib/haptics";
+import { shareDrinkCard } from "@/lib/shareCard";
 import DrinkImage from "@/components/DrinkImage";
 
 // Full-screen bottom sheet (mobile) / centered card (desktop) showing one drink
@@ -190,6 +191,12 @@ export default function DrinkDetail({
                 </button>
               </div>
             )}
+            <button
+              onClick={() => shareDrinkCard(drink)}
+              className="btn-ghost mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-sm"
+            >
+              🔗 分享呢杯
+            </button>
           </div>
         </div>
       </div>
