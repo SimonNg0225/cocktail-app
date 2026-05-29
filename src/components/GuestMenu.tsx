@@ -23,13 +23,17 @@ export default function GuestMenu() {
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [activeStrengths, setActiveStrengths] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
   const [favOnly, setFavOnly] = useState(false);
+  const [hasHistory, setHasHistory] = useState(false);
   const [mood, setMood] = useState("");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
@@ -45,14 +49,47 @@ export default function GuestMenu() {
         .eq("is_available", true)
         .order("created_at", { ascending: true });
       if (!active) return;
-      if (error) setError(error.message);
-      else setDrinks((data as Drink[]) ?? []);
+      if (error) {
+        setError(error.message);
+      } else {
+        const list = (data as Drink[]) ?? [];
+        setDrinks(list);
+        // One-tap reorder handed over from the 我的單 history page: keep only
+        // drinks still on tonight's menu, then drop the guest straight into the
+        // order sheet.
+        try {
+          const raw = localStorage.getItem("reorderCart");
+          if (raw) {
+            localStorage.removeItem("reorderCart");
+            const wanted = JSON.parse(raw) as Record<string, number>;
+            const avail: Record<string, number> = {};
+            for (const d of list) if (wanted[d.id] > 0) avail[d.id] = wanted[d.id];
+            if (Object.keys(avail).length > 0) {
+              setCart(avail);
+              setSheetOpen(true);
+            }
+          }
+        } catch {
+          // ignore corrupt handoff
+        }
+      }
       setLoading(false);
     })();
     return () => {
       active = false;
     };
   }, [supabase]);
+
+  // Surface the 我的單 link only once this device has placed an order.
+  useEffect(() => {
+    try {
+      const mine = JSON.parse(localStorage.getItem("myOrders") ?? "[]");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHasHistory(Array.isArray(mine) && mine.length > 0);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const cartDrinks = drinks.filter((d) => (cart[d.id] ?? 0) > 0);
@@ -61,12 +98,39 @@ export default function GuestMenu() {
   const presentTags = DRINK_TAGS.filter((t) =>
     drinks.some((d) => (d.tags ?? []).includes(t.id)),
   );
-  // AND filter: a drink must carry every active tag (and be a favourite if 收藏-only).
-  const visible = drinks.filter(
-    (d) =>
-      activeTags.every((t) => (d.tags ?? []).includes(t)) &&
-      (!favOnly || isFav(d.id)),
-  );
+
+  // Strength buckets present on the menu, kept in ascending potency order.
+  const STRENGTH_ORDER = ["無酒精", "輕怡", "中度", "偏烈", "勁烈"];
+  const strengthMeta = new Map<string, { emoji: string; color: string }>();
+  for (const d of drinks) {
+    const s = strengthInfo(d.abv);
+    if (s) strengthMeta.set(s.label, { emoji: s.emoji, color: s.color });
+  }
+  const presentStrengths = STRENGTH_ORDER.filter((l) => strengthMeta.has(l));
+
+  const q = query.trim().toLowerCase();
+  // AND filter across every active facet: tags, favourites, strength, search.
+  const visible = drinks.filter((d) => {
+    if (!activeTags.every((t) => (d.tags ?? []).includes(t))) return false;
+    if (favOnly && !isFav(d.id)) return false;
+    if (activeStrengths.length > 0) {
+      const s = strengthInfo(d.abv);
+      if (!s || !activeStrengths.includes(s.label)) return false;
+    }
+    if (q) {
+      const hay = [d.name, d.description ?? "", ...(d.ingredients ?? [])]
+        .join(" ")
+        .toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const hasFilters =
+    activeTags.length > 0 ||
+    favOnly ||
+    activeStrengths.length > 0 ||
+    q.length > 0;
 
   function toggleTag(id: string) {
     setActiveTags((cur) =>
@@ -74,9 +138,21 @@ export default function GuestMenu() {
     );
   }
 
-  function focusDrink(id: string) {
-    setActiveTags([]); // make sure the picked drink isn't filtered out
+  function toggleStrength(label: string) {
+    setActiveStrengths((cur) =>
+      cur.includes(label) ? cur.filter((s) => s !== label) : [...cur, label],
+    );
+  }
+
+  function clearFilters() {
+    setActiveTags([]);
+    setActiveStrengths([]);
     setFavOnly(false);
+    setQuery("");
+  }
+
+  function focusDrink(id: string) {
+    clearFilters(); // make sure the picked drink isn't filtered out
     setHighlightId(id);
     window.setTimeout(() => {
       document
@@ -166,6 +242,7 @@ export default function GuestMenu() {
       drink_id: d.id,
       drink_name: d.name,
       quantity: cart[d.id],
+      note: itemNotes[d.id]?.trim() || null,
     }));
 
     const { error: itemsErr } = await supabase.from("order_items").insert(items);
@@ -200,12 +277,22 @@ export default function GuestMenu() {
           揀你心水嗰杯，落單俾調酒師，坐低等享受。
         </p>
         <div className="mx-auto mt-5 h-px w-24 bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-        <Link
-          href="/stars"
-          className="btn-ghost mt-5 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm"
-        >
-          🏆 今晚之星排行榜 →
-        </Link>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <Link
+            href="/stars"
+            className="btn-ghost inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm"
+          >
+            🏆 今晚之星 →
+          </Link>
+          {hasHistory && (
+            <Link
+              href="/orders"
+              className="btn-ghost inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm"
+            >
+              🧾 我的單 →
+            </Link>
+          )}
+        </div>
       </header>
 
       {loading && (
@@ -294,66 +381,117 @@ export default function GuestMenu() {
         </div>
       )}
 
-      {!loading && (presentTags.length > 0 || favs.length > 0) && (
-        <div className="filter-rail -mx-4 mb-5 px-4 py-2.5">
-          <div className="no-scrollbar flex gap-2 overflow-x-auto">
-            {favs.length > 0 && (
-              <button
-                onClick={() => {
-                  haptic("light");
-                  setFavOnly((v) => !v);
-                }}
-                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
-                  favOnly ? "btn-gold" : "btn-ghost"
-                }`}
-              >
-                ❤️ 我的收藏
-              </button>
-            )}
-            {presentTags.map((t) => {
-              const on = activeTags.includes(t.id);
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    haptic("light");
-                    toggleTag(t.id);
-                  }}
-                  className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
-                    on ? "btn-gold" : "btn-ghost"
-                  }`}
-                >
-                  {t.emoji} {t.label}
-                </button>
-              );
-            })}
-            {(activeTags.length > 0 || favOnly) && (
-              <button
-                onClick={() => {
-                  setActiveTags([]);
-                  setFavOnly(false);
-                }}
-                className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted hover:text-foreground"
-              >
-                清除
-              </button>
-            )}
-          </div>
+      {!loading && drinks.length > 0 && (
+        <div className="relative mb-4">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-2">
+            🔍
+          </span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="搵酒名、材料…"
+            className="field w-full py-2.5 pl-9 pr-9 text-sm"
+            aria-label="搜尋酒單"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="清除搜尋"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-2 hover:text-foreground"
+            >
+              ✕
+            </button>
+          )}
         </div>
       )}
+
+      {!loading &&
+        (presentTags.length > 0 ||
+          favs.length > 0 ||
+          presentStrengths.length > 0) && (
+          <div className="filter-rail -mx-4 mb-5 px-4 py-2.5">
+            <div className="no-scrollbar flex gap-2 overflow-x-auto">
+              {favs.length > 0 && (
+                <button
+                  onClick={() => {
+                    haptic("light");
+                    setFavOnly((v) => !v);
+                  }}
+                  className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
+                    favOnly ? "btn-gold" : "btn-ghost"
+                  }`}
+                >
+                  ❤️ 我的收藏
+                </button>
+              )}
+              {presentTags.map((t) => {
+                const on = activeTags.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      haptic("light");
+                      toggleTag(t.id);
+                    }}
+                    className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
+                      on ? "btn-gold" : "btn-ghost"
+                    }`}
+                  >
+                    {t.emoji} {t.label}
+                  </button>
+                );
+              })}
+              {presentStrengths.length > 0 && (
+                <>
+                  <span
+                    className="shrink-0 self-center px-0.5 text-border"
+                    aria-hidden
+                  >
+                    |
+                  </span>
+                  {presentStrengths.map((label) => {
+                    const on = activeStrengths.includes(label);
+                    const meta = strengthMeta.get(label);
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => {
+                          haptic("light");
+                          toggleStrength(label);
+                        }}
+                        className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
+                          on ? "btn-gold" : "btn-ghost"
+                        }`}
+                      >
+                        {meta?.emoji} {label}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+              {hasFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted hover:text-foreground"
+                >
+                  清除
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
       {!loading && drinks.length > 0 && visible.length === 0 && (
         <div className="card p-8 text-center animate-fade-in">
           <p className="text-muted">
-            {favOnly && activeTags.length === 0
+            {favOnly && !activeTags.length && !activeStrengths.length && !q
               ? "你仲未收藏任何一杯，撳卡片上面個 🤍 試吓 ❤️"
-              : "冇酒符合呢個篩選 🤔"}
+              : q
+                ? `搵唔到「${query.trim()}」🤔`
+                : "冇酒符合呢個篩選 🤔"}
           </p>
           <button
-            onClick={() => {
-              setActiveTags([]);
-              setFavOnly(false);
-            }}
+            onClick={clearFilters}
             className="btn-ghost mt-3 rounded-full px-4 py-1.5 text-sm"
           >
             清除篩選
@@ -516,11 +654,44 @@ export default function GuestMenu() {
                       收起 ↓
                     </button>
                   </div>
-                  <ul className="max-h-40 space-y-1.5 overflow-y-auto text-sm">
+                  <ul className="max-h-60 space-y-3 overflow-y-auto">
                     {cartDrinks.map((d) => (
-                      <li key={d.id} className="flex justify-between">
-                        <span>{d.name}</span>
-                        <span className="text-muted tabular-nums">× {cart[d.id]}</span>
+                      <li key={d.id} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <span className="min-w-0 flex-1 truncate font-medium">
+                            {d.name}
+                          </span>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              onClick={() => remove(d.id)}
+                              aria-label="減一杯"
+                              className="btn-ghost flex h-7 w-7 items-center justify-center rounded-full text-base leading-none"
+                            >
+                              −
+                            </button>
+                            <span
+                              key={cart[d.id]}
+                              className="animate-bump w-4 text-center tabular-nums"
+                            >
+                              {cart[d.id]}
+                            </span>
+                            <button
+                              onClick={() => add(d.id)}
+                              aria-label="加一杯"
+                              className="btn-gold flex h-7 w-7 items-center justify-center rounded-full text-base leading-none"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        <input
+                          value={itemNotes[d.id] ?? ""}
+                          onChange={(e) =>
+                            setItemNotes((n) => ({ ...n, [d.id]: e.target.value }))
+                          }
+                          placeholder="呢杯備註（例如：少冰、走甜）"
+                          className="field w-full px-3 py-1.5 text-xs"
+                        />
                       </li>
                     ))}
                   </ul>
@@ -534,7 +705,7 @@ export default function GuestMenu() {
                   <input
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="備註（例如：少冰、淡啲）"
+                    placeholder="成張單備註（例如：枱號、一齊上）"
                     className="field w-full px-4 py-2.5 text-sm"
                   />
                   {error && <p className="text-sm text-danger">{error}</p>}

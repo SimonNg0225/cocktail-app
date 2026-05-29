@@ -10,6 +10,7 @@ export default function DimToggle() {
 
   useEffect(() => {
     const saved = localStorage.getItem("dimMode") === "on";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDim(saved);
     setReady(true);
   }, []);

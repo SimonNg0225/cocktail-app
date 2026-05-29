@@ -181,9 +181,18 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-muted">你嘅單</h2>
         <ul className="space-y-2.5">
           {items.map((it) => (
-            <li key={it.id} className="flex items-center justify-between">
-              <span>{it.drink_name}</span>
-              <span className="text-muted tabular-nums">× {it.quantity}</span>
+            <li key={it.id} className="flex items-start justify-between gap-2">
+              <span className="min-w-0">
+                {it.drink_name}
+                {it.note && (
+                  <span className="mt-0.5 block text-xs font-medium text-accent">
+                    📝 {it.note}
+                  </span>
+                )}
+              </span>
+              <span className="shrink-0 text-muted tabular-nums">
+                × {it.quantity}
+              </span>
             </li>
           ))}
         </ul>

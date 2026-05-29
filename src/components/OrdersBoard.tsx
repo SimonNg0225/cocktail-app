@@ -311,11 +311,20 @@ export default function OrdersBoard() {
           </div>
         </div>
 
-        <ul className="mt-3 space-y-1 text-sm">
+        <ul className="mt-3 space-y-1.5 text-sm">
           {(order.order_items ?? []).map((it) => (
-            <li key={it.id} className="flex justify-between">
-              <span>{it.drink_name}</span>
-              <span className="text-muted">× {it.quantity}</span>
+            <li key={it.id} className="flex justify-between gap-2">
+              <span className="min-w-0">
+                {it.drink_name}
+                {it.note && (
+                  <span className="mt-0.5 block text-xs font-medium text-accent">
+                    📝 {it.note}
+                  </span>
+                )}
+              </span>
+              <span className="shrink-0 text-muted tabular-nums">
+                × {it.quantity}
+              </span>
             </li>
           ))}
         </ul>
