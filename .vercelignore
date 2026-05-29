@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.vercel
+.env*.local
+supabase/.temp
+*.tsbuildinfo
+.DS_Store
