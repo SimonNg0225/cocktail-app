@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { Order, OrderItem, OrderStatus as Status } from "@/lib/types";
 import Confetti from "@/components/Confetti";
 import Ambient from "@/components/Ambient";
+import StampUnlock from "@/components/StampUnlock";
 import { recordServedOrder } from "@/lib/collection";
-import { toast } from "@/lib/toast";
 import { haptic } from "@/lib/haptics";
 
 const STEPS: { key: Status; label: string; icon: string }[] = [
@@ -29,6 +29,7 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [unlocked, setUnlocked] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -78,11 +79,12 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
     );
     if (newly.length > 0) {
       haptic("success");
-      const names = newly
-        .map((id) => items.find((it) => it.drink_id === id)?.drink_name)
-        .filter(Boolean)
-        .join("、");
-      toast(`🎉 解鎖新印章：${names}`);
+      const list = newly.map((id) => ({
+        id,
+        name: items.find((it) => it.drink_id === id)?.drink_name ?? "新酒",
+      }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUnlocked(list);
     }
   }, [order?.status, order?.id, items]);
 
@@ -132,6 +134,9 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
     <div className="mx-auto w-full max-w-xl px-4 pb-16 pt-12">
       <Ambient />
       <Confetti show={served} />
+      {unlocked.length > 0 && (
+        <StampUnlock drinks={unlocked} onClose={() => setUnlocked([])} />
+      )}
       <header className="text-center animate-fade-up">
         <p className="text-xs uppercase tracking-[0.4em] text-accent">訂單狀態</p>
         <h1 className="mt-3 font-display text-3xl font-semibold">

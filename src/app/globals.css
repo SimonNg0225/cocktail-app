@@ -217,6 +217,15 @@ body {
     animation: bump 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
+  /* Stamp unlock: a seal slams down with a tiny recoil, then a gold ink ripple
+     blooms out from the point of impact. */
+  .animate-stamp-press {
+    animation: stamp-press 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  }
+  .animate-ink-ripple {
+    animation: ink-ripple 0.8s ease-out both;
+  }
+
   /* One-time gold light sweep — draws the eye to a fresh recommendation. */
   .flash-once {
     position: relative;
@@ -347,6 +356,36 @@ body {
     transform: scale(1);
   }
 }
+@keyframes stamp-press {
+  0% {
+    opacity: 0;
+    transform: scale(2.3) rotate(-14deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.92) rotate(3deg);
+  }
+  72% {
+    transform: scale(1.05) rotate(-1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+@keyframes ink-ripple {
+  0% {
+    opacity: 0;
+    transform: scale(0.45);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
 @keyframes flash-sweep {
   to {
     transform: translateX(120%);
@@ -368,6 +407,8 @@ body {
   .animate-glow,
   .animate-steam,
   .animate-bump,
+  .animate-stamp-press,
+  .animate-ink-ripple,
   .text-gradient-gold-anim {
     animation: none;
   }
