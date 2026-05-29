@@ -4,6 +4,8 @@ import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
 import DimToggle from "@/components/DimToggle";
 import InstallPrompt from "@/components/InstallPrompt";
+import Toaster from "@/components/Toaster";
+import BottomNav from "@/components/BottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +56,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <BottomNav />
+        <Toaster />
         <DimToggle />
         <InstallPrompt />
         <PwaRegister />

@@ -2,13 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Drink } from "@/lib/types";
-import { DRINK_TAGS, tagLabel } from "@/lib/tags";
+import {
+  DRINK_TAGS,
+  tagLabel,
+  SECTION_ORDER,
+  SECTION_META,
+  drinkSectionId,
+} from "@/lib/tags";
 import { strengthInfo } from "@/lib/strength";
 import { useFavorites } from "@/lib/useFavorites";
 import { haptic } from "@/lib/haptics";
+import { toast } from "@/lib/toast";
 import DrinkImage from "@/components/DrinkImage";
 import DrinkDetail from "@/components/DrinkDetail";
 import Ambient from "@/components/Ambient";
@@ -33,7 +39,6 @@ export default function GuestMenu() {
   const [activeStrengths, setActiveStrengths] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [favOnly, setFavOnly] = useState(false);
-  const [hasHistory, setHasHistory] = useState(false);
   const [mood, setMood] = useState("");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
@@ -80,17 +85,6 @@ export default function GuestMenu() {
     };
   }, [supabase]);
 
-  // Surface the 我的單 link only once this device has placed an order.
-  useEffect(() => {
-    try {
-      const mine = JSON.parse(localStorage.getItem("myOrders") ?? "[]");
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHasHistory(Array.isArray(mine) && mine.length > 0);
-    } catch {
-      // ignore
-    }
-  }, []);
-
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const cartDrinks = drinks.filter((d) => (cart[d.id] ?? 0) > 0);
 
@@ -132,6 +126,18 @@ export default function GuestMenu() {
     activeStrengths.length > 0 ||
     q.length > 0;
 
+  const railShown =
+    presentTags.length > 0 || favs.length > 0 || presentStrengths.length > 0;
+
+  // Group visible drinks into menu sections; only show headers when more than
+  // one section is populated (otherwise a lone header just adds noise).
+  const grouped = SECTION_ORDER.map((id) => ({
+    id,
+    ...SECTION_META[id],
+    drinks: visible.filter((d) => drinkSectionId(d.tags ?? []) === id),
+  })).filter((g) => g.drinks.length > 0);
+  const showSections = grouped.length > 1;
+
   function toggleTag(id: string) {
     setActiveTags((cur) =>
       cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id],
@@ -168,6 +174,8 @@ export default function GuestMenu() {
   function randomPick() {
     const pool = visible.length > 0 ? visible : drinks;
     if (pool.length === 0) return;
+    // Runs only on the 隨機 button click (an event handler), not during render.
+    // eslint-disable-next-line react-hooks/purity
     const pick = pool[Math.floor(Math.random() * pool.length)];
     setSuggestion({
       drinkId: pick.id,
@@ -203,6 +211,11 @@ export default function GuestMenu() {
 
   function add(id: string) {
     haptic("light");
+    // Toast only on the first glass so repeated + taps stay quiet.
+    if ((cart[id] ?? 0) === 0) {
+      const d = drinks.find((x) => x.id === id);
+      if (d) toast(`已加入 🍸 ${d.name}`);
+    }
     setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
   }
   function remove(id: string) {
@@ -262,6 +275,125 @@ export default function GuestMenu() {
     router.push(`/order/${order.id}`);
   }
 
+  const renderDrink = (d: Drink, i: number) => {
+    const qty = cart[d.id] ?? 0;
+    const ingredients = d.ingredients ?? [];
+    const tags = d.tags ?? [];
+    const strength = strengthInfo(d.abv);
+    const fav = isFav(d.id);
+    return (
+      <li
+        key={d.id}
+        id={`drink-${d.id}`}
+        className={`card card-hover relative flex items-center gap-4 p-3 animate-fade-up transition-shadow ${
+          highlightId === d.id ? "ring-2 ring-accent" : ""
+        }`}
+        style={{ animationDelay: `${Math.min(i * 60, 360)}ms` }}
+      >
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            haptic("light");
+            toggleFav(d.id);
+          }}
+          aria-label={fav ? "取消收藏" : "收藏"}
+          aria-pressed={fav}
+          className="absolute left-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-sm backdrop-blur transition hover:bg-black/65"
+        >
+          <span className={fav ? "animate-pop" : ""}>{fav ? "❤️" : "🤍"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelected(d)}
+          className="flex min-w-0 flex-1 items-center gap-4 text-left"
+        >
+          <div className="relative h-20 w-20 shrink-0">
+            <DrinkImage
+              src={d.image_url}
+              name={d.name}
+              rounded="rounded-xl"
+              className="h-full w-full"
+            />
+            {strength && (
+              <span
+                className="strength-dot absolute bottom-1 right-1 h-3 w-3 rounded-full"
+                style={{
+                  background: strength.color,
+                  ["--dot" as string]: strength.color,
+                }}
+                title={strength.label}
+                aria-hidden
+              />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-lg font-semibold leading-tight">
+              {d.name}
+            </h2>
+            {d.description && (
+              <p className="mt-1 line-clamp-2 text-sm text-muted">
+                {d.description}
+              </p>
+            )}
+            {ingredients.length > 0 && (
+              <p className="mt-1 line-clamp-2 text-xs text-muted-2">
+                材料：{ingredients.join("、")}
+              </p>
+            )}
+            {(tags.length > 0 || strength) && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {strength && (
+                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">
+                    {strength.emoji} {strength.label}
+                    {d.abv != null && d.abv > 0 && ` ${d.abv}%`}
+                  </span>
+                )}
+                {tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted-2"
+                  >
+                    {tagLabel(t)}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </button>
+        {qty === 0 ? (
+          <button
+            onClick={() => add(d.id)}
+            className="btn-gold shrink-0 rounded-full px-4 py-2 text-sm"
+          >
+            加入
+          </button>
+        ) : (
+          <div className="flex shrink-0 items-center gap-2.5">
+            <button
+              onClick={() => remove(d.id)}
+              className="btn-ghost flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none"
+            >
+              −
+            </button>
+            <span
+              key={qty}
+              className="animate-bump w-4 text-center font-semibold tabular-nums"
+            >
+              {qty}
+            </span>
+            <button
+              onClick={() => add(d.id)}
+              className="btn-gold flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none"
+            >
+              +
+            </button>
+          </div>
+        )}
+      </li>
+    );
+  };
+
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pb-36 pt-10">
       <Ambient />
@@ -277,22 +409,6 @@ export default function GuestMenu() {
           揀你心水嗰杯，落單俾調酒師，坐低等享受。
         </p>
         <div className="mx-auto mt-5 h-px w-24 bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          <Link
-            href="/stars"
-            className="btn-ghost inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm"
-          >
-            🏆 今晚之星 →
-          </Link>
-          {hasHistory && (
-            <Link
-              href="/orders"
-              className="btn-ghost inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm"
-            >
-              🧾 我的單 →
-            </Link>
-          )}
-        </div>
       </header>
 
       {loading && (
@@ -499,131 +615,32 @@ export default function GuestMenu() {
         </div>
       )}
 
-      <ul className="space-y-4">
-        {visible.map((d, i) => {
-          const qty = cart[d.id] ?? 0;
-          const ingredients = d.ingredients ?? [];
-          const tags = d.tags ?? [];
-          const strength = strengthInfo(d.abv);
-          const fav = isFav(d.id);
-          return (
-            <li
-              key={d.id}
-              id={`drink-${d.id}`}
-              className={`card card-hover relative flex items-center gap-4 p-3 animate-fade-up transition-shadow ${
-                highlightId === d.id ? "ring-2 ring-accent" : ""
-              }`}
-              style={{ animationDelay: `${Math.min(i * 60, 360)}ms` }}
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  haptic("light");
-                  toggleFav(d.id);
-                }}
-                aria-label={fav ? "取消收藏" : "收藏"}
-                aria-pressed={fav}
-                className="absolute left-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-sm backdrop-blur transition hover:bg-black/65"
+      {showSections ? (
+        <div className="space-y-7">
+          {grouped.map((g) => (
+            <section key={g.id}>
+              <h2
+                className="sticky z-[15] -mx-4 mb-3 flex items-center gap-2 bg-background/80 px-4 py-2 font-display text-base font-semibold backdrop-blur"
+                style={{ top: railShown ? "3.1rem" : 0 }}
               >
-                <span className={fav ? "animate-pop" : ""}>
-                  {fav ? "❤️" : "🤍"}
+                <span aria-hidden>{g.emoji}</span>
+                {g.label}
+                <span className="ml-0.5 text-xs font-normal text-muted-2">
+                  {g.drinks.length}
                 </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelected(d)}
-                className="flex min-w-0 flex-1 items-center gap-4 text-left"
-              >
-                <div className="relative h-20 w-20 shrink-0">
-                  <DrinkImage
-                    src={d.image_url}
-                    name={d.name}
-                    rounded="rounded-xl"
-                    className="h-full w-full"
-                  />
-                  {strength && (
-                    <span
-                      className="strength-dot absolute bottom-1 right-1 h-3 w-3 rounded-full"
-                      style={{
-                        background: strength.color,
-                        ["--dot" as string]: strength.color,
-                      }}
-                      title={strength.label}
-                      aria-hidden
-                    />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="font-display text-lg font-semibold leading-tight">
-                    {d.name}
-                  </h2>
-                  {d.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-muted">
-                      {d.description}
-                    </p>
-                  )}
-                  {ingredients.length > 0 && (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-2">
-                      材料：{ingredients.join("、")}
-                    </p>
-                  )}
-                  {(tags.length > 0 || strength) && (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {strength && (
-                        <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">
-                          {strength.emoji} {strength.label}
-                          {d.abv != null && d.abv > 0 && ` ${d.abv}%`}
-                        </span>
-                      )}
-                      {tags.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted-2"
-                        >
-                          {tagLabel(t)}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </button>
-              {qty === 0 ? (
-                <button
-                  onClick={() => add(d.id)}
-                  className="btn-gold shrink-0 rounded-full px-4 py-2 text-sm"
-                >
-                  加入
-                </button>
-              ) : (
-                <div className="flex shrink-0 items-center gap-2.5">
-                  <button
-                    onClick={() => remove(d.id)}
-                    className="btn-ghost flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none"
-                  >
-                    −
-                  </button>
-                  <span
-                    key={qty}
-                    className="animate-bump w-4 text-center font-semibold tabular-nums"
-                  >
-                    {qty}
-                  </span>
-                  <button
-                    onClick={() => add(d.id)}
-                    className="btn-gold flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none"
-                  >
-                    +
-                  </button>
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+              </h2>
+              <ul className="space-y-4">
+                {g.drinks.map((d, i) => renderDrink(d, i))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <ul className="space-y-4">{visible.map((d, i) => renderDrink(d, i))}</ul>
+      )}
 
       {totalItems > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-10">
+        <div className="fixed inset-x-0 bottom-0 z-30">
           <div className="pointer-events-none h-10 bg-gradient-to-t from-background to-transparent" />
           <div className="border-t border-border-soft bg-surface/85 backdrop-blur-xl">
             <div className="mx-auto w-full max-w-2xl px-4 py-3">
