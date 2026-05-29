@@ -16,7 +16,7 @@ export default async function AdminLayout({
   if (!user) return <>{children}</>;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-6">
+    <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-6">
       <header className="mb-7">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">

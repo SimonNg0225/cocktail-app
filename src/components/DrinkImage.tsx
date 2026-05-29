@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 const GRADIENTS = [
   ["#4a2c1a", "#a85d2e"],
   ["#3a2342", "#8a4a7a"],
@@ -27,21 +31,33 @@ export default function DrinkImage({
   className?: string;
   rounded?: string;
 }) {
-  if (src) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={src}
-        alt={name}
-        className={`${rounded} object-cover ${className}`}
-        loading="lazy"
-      />
-    );
-  }
-
   const h = hash(name || "cocktail");
   const [a, b] = GRADIENTS[h % GRADIENTS.length];
   const glass = GLASSES[(h >> 3) % GLASSES.length];
+
+  const [loaded, setLoaded] = useState(false);
+
+  if (src) {
+    // Coloured gradient placeholder shows instantly; the photo fades in over it
+    // once decoded — no jarring pop-in.
+    return (
+      <div
+        className={`${rounded} ${className} relative overflow-hidden`}
+        style={{ background: `linear-gradient(145deg, ${a}, ${b})` }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={name}
+          onLoad={() => setLoaded(true)}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
 
   return (
     <div

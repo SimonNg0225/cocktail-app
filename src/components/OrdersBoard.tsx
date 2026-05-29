@@ -36,7 +36,6 @@ export default function OrdersBoard() {
   const supabase = useMemo(() => createClient(), []);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showDone, setShowDone] = useState(false);
   const [alertsOn, setAlertsOn] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
   const alertsOnRef = useRef(false);
@@ -164,12 +163,31 @@ export default function OrdersBoard() {
     await supabase.from("orders").update({ status }).eq("id", id);
   }
 
-  const active = orders.filter(
-    (o) => o.status === "pending" || o.status === "making",
-  );
-  const done = orders.filter(
-    (o) => o.status === "served" || o.status === "cancelled",
-  );
+  const columns = [
+    {
+      key: "pending",
+      label: "待處理",
+      emoji: "📝",
+      empty: "暫時冇新單，輕鬆下 🍸",
+      orders: orders.filter((o) => o.status === "pending"),
+    },
+    {
+      key: "making",
+      label: "調緊",
+      emoji: "🍸",
+      empty: "未開始調任何一杯",
+      orders: orders.filter((o) => o.status === "making"),
+    },
+    {
+      key: "done",
+      label: "完成",
+      emoji: "✨",
+      empty: "仲未有完成嘅單",
+      orders: orders.filter(
+        (o) => o.status === "served" || o.status === "cancelled",
+      ),
+    },
+  ];
 
   // Live party dashboard: order count, glasses served, crowd favourite.
   const stats = useMemo(() => {
@@ -252,38 +270,30 @@ export default function OrdersBoard() {
         </button>
       </div>
 
-      <section>
-        <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-muted">
-          處理緊 · {active.length}
-        </h2>
-        {active.length === 0 ? (
-          <div className="card p-8 text-center text-muted">
-            暫時冇新單，輕鬆下 🍸
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {active.map((o) => (
-              <OrderCard key={o.id} order={o} onStatus={setStatus} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <button
-          onClick={() => setShowDone((v) => !v)}
-          className="mb-3 text-xs uppercase tracking-[0.2em] text-muted hover:text-foreground"
-        >
-          已完成 · {done.length} {showDone ? "▲" : "▼"}
-        </button>
-        {showDone && (
-          <ul className="space-y-3">
-            {done.map((o) => (
-              <OrderCard key={o.id} order={o} onStatus={setStatus} />
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="grid gap-4 md:grid-cols-3 md:items-start">
+        {columns.map((col) => (
+          <section key={col.key}>
+            <h2 className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted">
+              <span aria-hidden>{col.emoji}</span>
+              {col.label}
+              <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-[0.7rem] tabular-nums text-muted-2">
+                {col.orders.length}
+              </span>
+            </h2>
+            {col.orders.length === 0 ? (
+              <div className="card p-6 text-center text-sm text-muted-2">
+                {col.empty}
+              </div>
+            ) : (
+              <ul className="space-y-3 md:max-h-[calc(100vh-18rem)] md:overflow-y-auto md:pr-1">
+                {col.orders.map((o) => (
+                  <OrderCard key={o.id} order={o} onStatus={setStatus} />
+                ))}
+              </ul>
+            )}
+          </section>
+        ))}
+      </div>
     </div>
   );
 
