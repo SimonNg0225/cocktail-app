@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Order, OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus, Drink } from "@/lib/types";
 
 const NEXT_ACTION: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> = {
   pending: { to: "making", label: "開始調" },
@@ -35,6 +35,7 @@ function timeAgo(iso: string) {
 export default function OrdersBoard() {
   const supabase = useMemo(() => createClient(), []);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [drinksById, setDrinksById] = useState<Record<string, Drink>>({});
   const [loading, setLoading] = useState(true);
   const [alertsOn, setAlertsOn] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
@@ -131,6 +132,15 @@ export default function OrdersBoard() {
       }
     }
     load();
+    // Recipes for the bartender — fetched once (rarely change).
+    supabase
+      .from("drinks")
+      .select("id, name, recipe, ingredients")
+      .then(({ data }) => {
+        const map: Record<string, Drink> = {};
+        for (const d of (data as Drink[]) ?? []) map[d.id] = d;
+        setDrinksById(map);
+      });
     const channel = supabase
       .channel("orders-board")
       .on(
@@ -321,22 +331,38 @@ export default function OrdersBoard() {
           </div>
         </div>
 
-        <ul className="mt-3 space-y-1.5 text-sm">
-          {(order.order_items ?? []).map((it) => (
-            <li key={it.id} className="flex justify-between gap-2">
-              <span className="min-w-0">
-                {it.drink_name}
-                {it.note && (
-                  <span className="mt-0.5 block text-xs font-medium text-accent">
-                    📝 {it.note}
+        <ul className="mt-3 space-y-2.5 text-sm">
+          {(order.order_items ?? []).map((it) => {
+            const drink = it.drink_id ? drinksById[it.drink_id] : undefined;
+            const ingredients = drink?.ingredients ?? [];
+            const recipe = (drink?.recipe ?? "").trim();
+            return (
+              <li key={it.id}>
+                <div className="flex justify-between gap-2">
+                  <span className="min-w-0 font-medium">
+                    {it.drink_name}
+                    {it.note && (
+                      <span className="mt-0.5 block text-xs font-medium text-accent">
+                        📝 {it.note}
+                      </span>
+                    )}
                   </span>
+                  <span className="shrink-0 text-muted tabular-nums">
+                    × {it.quantity}
+                  </span>
+                </div>
+                {(recipe || ingredients.length > 0) && (
+                  <div className="mt-1.5 rounded-lg bg-surface-2/70 px-2.5 py-2 text-xs leading-relaxed text-foreground/90">
+                    {recipe ? (
+                      <p className="whitespace-pre-wrap">{recipe}</p>
+                    ) : (
+                      <p>🧪 材料：{ingredients.join("、")}</p>
+                    )}
+                  </div>
                 )}
-              </span>
-              <span className="shrink-0 text-muted tabular-nums">
-                × {it.quantity}
-              </span>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
 
         {order.note && (

@@ -6,6 +6,7 @@ import type { Drink, Order } from "@/lib/types";
 import Ambient from "@/components/Ambient";
 import DrinkImage from "@/components/DrinkImage";
 import { recordServedOrder, getCollection, type CollEntry } from "@/lib/collection";
+import { shareTasteCard } from "@/lib/personaCard";
 
 // Maps a guest's most-collected style into a playful "taste persona".
 const PERSONA: Record<string, string> = {
@@ -28,6 +29,7 @@ export default function CollectionBook() {
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [coll, setColl] = useState<Record<string, CollEntry>>({});
   const [loading, setLoading] = useState(true);
+  const [blurb, setBlurb] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -93,6 +95,54 @@ export default function CollectionBook() {
     const second = top[1] && PERSONA[top[1][0]];
     return second ? `${main} · 兼 ${second}` : main;
   })();
+
+  const topNames = Object.values(coll)
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 3)
+    .map((e) => e.name);
+
+  // Fetch a punchy AI blurb for the share card once we have a persona; cache by
+  // persona so we don't re-hit the endpoint each visit. Fetch happens in the
+  // background so the share tap stays instant.
+  useEffect(() => {
+    if (distinct < 1 || persona === "新手探險家") return;
+    const key = `tasteBlurb:${persona}:${distinct}`;
+    let cached: string | null = null;
+    try {
+      cached = localStorage.getItem(key);
+    } catch {
+      // ignore
+    }
+    if (cached) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBlurb(cached);
+      return;
+    }
+    let active = true;
+    fetch("/api/taste", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ persona, drinks: topNames }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!active) return;
+        const b = (d?.blurb ?? "").toString();
+        if (b) {
+          setBlurb(b);
+          try {
+            localStorage.setItem(key, b);
+          } catch {
+            // ignore
+          }
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persona, distinct]);
 
   const mocktails = drinks.filter((d) => (d.tags ?? []).includes("mocktail"));
   const achievements = [
@@ -173,6 +223,26 @@ export default function CollectionBook() {
               </div>
             </div>
           </div>
+
+          {distinct >= 1 && (
+            <button
+              onClick={() =>
+                shareTasteCard({
+                  persona,
+                  level,
+                  collected: inMenuCollected.length,
+                  total: drinks.length,
+                  cups: totalCups,
+                  top: topNames,
+                  blurb:
+                    blurb || `你係「${persona}」，識飲識享受，派對靈魂人物 🍸`,
+                })
+              }
+              className="btn-gold mb-6 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm"
+            >
+              ✨ 分享我的品味人格
+            </button>
+          )}
 
           {achievements.length > 0 && (
             <div className="mb-6 animate-fade-up">

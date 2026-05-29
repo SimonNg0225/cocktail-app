@@ -63,7 +63,11 @@ ${stockList}
     preference ? `客人偏好：${preference}。` : ""
   }${excludeBlock}
 
-每款請提供：名、一句簡介、所需材料清單、簡單做法步驟、0 至 3 個風格標籤，同埋估計每杯嘅酒精濃度 abv（百分比數字，例如 0、5、18；無酒精就 0）。標籤淨係可以由呢幾個揀（用英文 id）：mocktail（無酒精）、strong（烈）、refreshing（清爽）、sweet（甜）、sour（酸）、sparkling（有氣）。用繁體中文（廣東話亦可）。唔好推薦需要冇列出材料嘅酒。`;
+每款請提供：名、一句簡介、所需材料清單、簡單做法步驟、0 至 3 個風格標籤，同埋估計每杯嘅酒精濃度 abv（百分比數字，例如 0、5、18；無酒精就 0）。
+
+⚠️ 材料清單每一項都「必須」寫明份量，格式為「材料名 + 空格 + 份量」，例如：「白氈酒 45ml」、「青檸汁 20ml」、「糖漿 15ml」、「安格仕苦精 2 dash」。蘇打水／湯力水之類可寫「適量」或「填滿」，但都要有份量字眼。絕對唔好淨係寫材料名而冇份量。
+
+標籤淨係可以由呢幾個揀（用英文 id）：mocktail（無酒精）、strong（烈）、refreshing（清爽）、sweet（甜）、sour（酸）、sparkling（有氣）。用繁體中文（廣東話亦可）。唔好推薦需要冇列出材料嘅酒。`;
 
   try {
     const response = await ai.models.generateContent({
@@ -83,6 +87,8 @@ ${stockList}
                   description: { type: Type.STRING },
                   ingredients: {
                     type: Type.ARRAY,
+                    description:
+                      "每項材料都要含份量，例如「白氈酒 45ml」「青檸汁 20ml」「糖漿 15ml」「苦精 2 dash」；唔可以淨係材料名。",
                     items: { type: Type.STRING },
                   },
                   steps: { type: Type.ARRAY, items: { type: Type.STRING } },
