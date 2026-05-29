@@ -63,8 +63,28 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
 
   if (loading)
     return (
-      <div className="mx-auto max-w-xl px-4 pt-24 text-center">
-        <div className="shimmer mx-auto h-6 w-40 rounded" />
+      <div className="mx-auto w-full max-w-xl px-4 pb-16 pt-12">
+        <div className="flex flex-col items-center gap-3">
+          <div className="shimmer h-3 w-24 rounded-full" />
+          <div className="shimmer h-7 w-44 rounded-lg" />
+          <div className="shimmer h-4 w-56 rounded" />
+        </div>
+        <div className="mt-9 flex justify-center">
+          <div className="shimmer h-28 w-28 rounded-full" />
+        </div>
+        <div className="mt-8 flex items-center justify-between px-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-1 flex-col items-center gap-2.5">
+              <div className="shimmer h-12 w-12 rounded-full" />
+              <div className="shimmer h-3 w-10 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="card mt-9 space-y-2.5 p-5">
+          <div className="shimmer h-3 w-16 rounded" />
+          <div className="shimmer h-4 w-full rounded" />
+          <div className="shimmer h-4 w-2/3 rounded" />
+        </div>
       </div>
     );
 
@@ -161,9 +181,18 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-muted">你嘅單</h2>
         <ul className="space-y-2.5">
           {items.map((it) => (
-            <li key={it.id} className="flex items-center justify-between">
-              <span>{it.drink_name}</span>
-              <span className="text-muted tabular-nums">× {it.quantity}</span>
+            <li key={it.id} className="flex items-start justify-between gap-2">
+              <span className="min-w-0">
+                {it.drink_name}
+                {it.note && (
+                  <span className="mt-0.5 block text-xs font-medium text-accent">
+                    📝 {it.note}
+                  </span>
+                )}
+              </span>
+              <span className="shrink-0 text-muted tabular-nums">
+                × {it.quantity}
+              </span>
             </li>
           ))}
         </ul>
