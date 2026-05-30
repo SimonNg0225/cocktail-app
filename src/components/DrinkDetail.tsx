@@ -6,6 +6,7 @@ import { tagLabel } from "@/lib/tags";
 import { strengthInfo } from "@/lib/strength";
 import { haptic } from "@/lib/haptics";
 import { shareDrinkCard } from "@/lib/shareCard";
+import { Heart, Share2 } from "lucide-react";
 import DrinkImage from "@/components/DrinkImage";
 
 // Full-screen bottom sheet (mobile) / centered card (desktop) showing one drink
@@ -70,9 +71,13 @@ export default function DrinkDetail({
           }}
           aria-label={isFav ? "取消收藏" : "收藏"}
           aria-pressed={isFav}
-          className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-lg backdrop-blur transition hover:bg-black/60"
+          className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur transition hover:bg-black/60"
         >
-          <span className={isFav ? "animate-pop" : ""}>{isFav ? "❤️" : "🤍"}</span>
+          <Heart
+            className={`h-[18px] w-[18px] ${isFav ? "animate-pop text-[#e07a6a]" : "text-white/85"}`}
+            fill={isFav ? "currentColor" : "none"}
+            strokeWidth={2}
+          />
         </button>
 
         <div className="relative aspect-[5/3] w-full overflow-hidden">
@@ -195,7 +200,8 @@ export default function DrinkDetail({
               onClick={() => shareDrinkCard(drink)}
               className="btn-ghost mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-sm"
             >
-              🔗 分享呢杯
+              <Share2 className="h-4 w-4" strokeWidth={1.75} />
+              分享呢杯
             </button>
           </div>
         </div>

@@ -19,6 +19,7 @@ import DrinkImage from "@/components/DrinkImage";
 import DrinkDetail from "@/components/DrinkDetail";
 import Ambient from "@/components/Ambient";
 import FortuneWheel from "@/components/FortuneWheel";
+import { Sparkles, Wand2, Disc3, Search, Heart } from "lucide-react";
 
 type Suggestion = { drinkId: string; name: string; reason: string };
 type Invented = {
@@ -388,9 +389,13 @@ export default function GuestMenu() {
           }}
           aria-label={fav ? "取消收藏" : "收藏"}
           aria-pressed={fav}
-          className="absolute left-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-sm backdrop-blur transition hover:bg-black/65"
+          className="absolute left-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 backdrop-blur transition hover:bg-black/65"
         >
-          <span className={fav ? "animate-pop" : ""}>{fav ? "❤️" : "🤍"}</span>
+          <Heart
+            className={`h-4 w-4 ${fav ? "animate-pop text-[#e07a6a]" : "text-white/80"}`}
+            fill={fav ? "currentColor" : "none"}
+            strokeWidth={2}
+          />
         </button>
         <button
           type="button"
@@ -544,22 +549,25 @@ export default function GuestMenu() {
             <button
               onClick={aiPick}
               disabled={suggesting}
-              className="btn-gold rounded-xl px-5 py-2.5 text-sm disabled:opacity-60"
+              className="btn-gold inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm disabled:opacity-60"
             >
-              {suggesting ? "諗緊…" : "✨ 幫我揀"}
+              <Sparkles className="h-4 w-4" strokeWidth={2} />
+              {suggesting ? "諗緊…" : "幫我揀"}
             </button>
             <button
               onClick={invent}
               disabled={inventing}
-              className="btn-gold rounded-xl px-5 py-2.5 text-sm disabled:opacity-60"
+              className="btn-gold inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm disabled:opacity-60"
             >
-              {inventing ? "調緊…" : "🍸 為你而調"}
+              <Wand2 className="h-4 w-4" strokeWidth={2} />
+              {inventing ? "調緊…" : "為你而調"}
             </button>
             <button
               onClick={() => setWheelOpen(true)}
-              className="btn-ghost rounded-xl px-5 py-2.5 text-sm"
+              className="btn-ghost inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm"
             >
-              🎡 命運輪盤
+              <Disc3 className="h-4 w-4" strokeWidth={1.75} />
+              命運輪盤
             </button>
           </div>
         </div>
@@ -655,9 +663,8 @@ export default function GuestMenu() {
 
       {!loading && drinks.length > 0 && (
         <div className="relative mb-4">
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-2">
-            🔍
-          </span>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -689,11 +696,16 @@ export default function GuestMenu() {
                     haptic("light");
                     setFavOnly((v) => !v);
                   }}
-                  className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
+                  className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium ${
                     favOnly ? "btn-gold" : "btn-ghost"
                   }`}
                 >
-                  ❤️ 我的收藏
+                  <Heart
+                    className="h-3.5 w-3.5"
+                    fill={favOnly ? "currentColor" : "none"}
+                    strokeWidth={2}
+                  />
+                  我的收藏
                 </button>
               )}
               {presentTags.map((t) => {

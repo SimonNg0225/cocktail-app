@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Martini, Stamp, ReceiptText, Trophy, type LucideIcon } from "lucide-react";
 
 // App-style bottom tab bar for guest pages. Hidden on host (/admin) and on the
 // order-status screen so it never competes with their own bottom actions.
-const TABS = [
-  { href: "/", label: "酒單", icon: "🍸" },
-  { href: "/collection", label: "圖鑑", icon: "📖" },
-  { href: "/orders", label: "我的單", icon: "🧾" },
-  { href: "/stars", label: "之星", icon: "🏆" },
+const TABS: { href: string; label: string; Icon: LucideIcon }[] = [
+  { href: "/", label: "酒單", Icon: Martini },
+  { href: "/collection", label: "圖鑑", Icon: Stamp },
+  { href: "/orders", label: "我的單", Icon: ReceiptText },
+  { href: "/stars", label: "之星", Icon: Trophy },
 ];
 
 export default function BottomNav() {
@@ -27,18 +28,22 @@ export default function BottomNav() {
       <div className="mx-auto flex w-full max-w-2xl">
         {TABS.map((t) => {
           const active = pathname === t.href;
+          const Icon = t.Icon;
           return (
             <Link
               key={t.href}
               href={t.href}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[0.7rem] transition-colors ${
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[0.7rem] transition-colors ${
                 active ? "text-accent" : "text-muted-2 hover:text-foreground"
               }`}
             >
-              <span className={`text-lg ${active ? "animate-pop" : ""}`}>
-                {t.icon}
-              </span>
+              <Icon
+                className={`h-[22px] w-[22px] transition-transform ${
+                  active ? "scale-110" : ""
+                }`}
+                strokeWidth={active ? 2 : 1.6}
+              />
               {t.label}
             </Link>
           );
@@ -47,3 +52,4 @@ export default function BottomNav() {
     </nav>
   );
 }
+
