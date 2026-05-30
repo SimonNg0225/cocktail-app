@@ -7,6 +7,7 @@ import Ambient from "@/components/Ambient";
 import DrinkImage from "@/components/DrinkImage";
 import { recordServedOrder, getCollection, type CollEntry } from "@/lib/collection";
 import { shareTasteCard } from "@/lib/personaCard";
+import { Sparkles } from "lucide-react";
 
 // Maps a guest's most-collected style into a playful "taste persona".
 const PERSONA: Record<string, string> = {
@@ -240,7 +241,8 @@ export default function CollectionBook() {
               }
               className="btn-gold mb-6 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm"
             >
-              ✨ 分享我的品味人格
+              <Sparkles className="h-4 w-4" strokeWidth={2} />
+              分享我的品味人格
             </button>
           )}
 
